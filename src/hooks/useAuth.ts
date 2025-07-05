@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { Session } from '@supabase/supabase-js';
 
 // Define User interface
 export interface User {
@@ -19,7 +20,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true);
@@ -37,7 +38,7 @@ export function useAuth() {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('name, avatar_url')
-        .eq('user_id', user.id)
+        .eq('user_id', data.user.id)
         .maybeSingle();
 
       if (profileError && profileError.code !== 'PGRST116') {

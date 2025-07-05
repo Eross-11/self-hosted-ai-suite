@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { EnhancedLayout } from './components/EnhancedLayout';
 import { EnhancedHero } from './components/EnhancedHero';
 
@@ -8,7 +8,6 @@ const MCPConsole = lazy(() => import('./components/MCPConsole').then(module => (
 const ContentStudio = lazy(() => import('./components/ContentStudio').then(module => ({ default: module.ContentStudio })));
 const ContentLibrary = lazy(() => import('./components/ContentLibrary').then(module => ({ default: module.ContentLibrary })));
 const NeuralCommandInterface = lazy(() => import('./components/NeuralCommandInterface').then(module => ({ default: module.NeuralCommandInterface })));
-const VideoTimeline = lazy(() => import('./components/VideoTimeline').then(module => ({ default: module.VideoTimeline })));
 const AIWorkflowOrchestrator = lazy(() => import('./components/AIWorkflowOrchestrator').then(module => ({ default: module.AIWorkflowOrchestrator })));
 const ModelHub = lazy(() => import('./components/ModelHub').then(module => ({ default: module.ModelHub })));
 const TheHive = lazy(() => import('./components/TheHive').then(module => ({ default: module.TheHive })));
@@ -28,7 +27,6 @@ import { useAuth } from './hooks/useAuth';
 import { useWebSocket } from './hooks/useWebSocket';
 
 // Lazy load pages
-const VideoTimelinePage = lazy(() => import('./pages/VideoTimelinePage').then(module => ({ default: module.VideoTimelinePage })));
 const FileUploadPage = lazy(() => import('./pages/FileUploadPage').then(module => ({ default: module.FileUploadPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(module => ({ default: module.SettingsPage })));
 const SocialCommandPage = lazy(() => import('./pages/SocialCommandPage').then(module => ({ default: module.SocialCommandPage })));
@@ -48,10 +46,8 @@ import {
   Share2, 
   Settings,
   ChevronLeft,
-  ChevronRight,
   Upload,
   LogOut,
-  User,
   Atom,
   Workflow,
   Clock,
@@ -70,48 +66,14 @@ function App() {
   const [currentView, setCurrentView] = useState('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
-  // Timeline state for demo
-  const [timelineClips, setTimelineClips] = useState([
-    {
-      id: '1',
-      type: 'video' as const,
-      name: 'Interview Main',
-      duration: 120,
-      startTime: 0,
-      endTime: 120,
-      track: 0,
-      thumbnail: 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      id: '2',
-      type: 'audio' as const,
-      name: 'Background Music',
-      duration: 180,
-      startTime: 10,
-      endTime: 190,
-      track: 2,
-      waveform: Array.from({ length: 50 }, () => Math.random())
-    },
-    {
-      id: '3',
-      type: 'generated' as const,
-      name: 'AI Generated Intro',
-      duration: 15,
-      startTime: 0,
-      endTime: 15,
-      track: 1,
-      metadata: {
-        model: 'HunyuanVideo',
-        prompt: 'Cinematic intro with logo reveal',
-        style: 'cinematic'
-      }
-    }
-  ]);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  
   const { user, isLoading: authLoading, logout, isAuthenticated } = useAuth();
   const { isConnected } = useWebSocket();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setCurrentView('dashboard');
+    }
+  }, [isAuthenticated]);
 
   // Define application commands for the command palette
   const commands: CommandAction[] = [
@@ -462,35 +424,8 @@ function App() {
       case 'timeline':
         return (
           <Suspense fallback={<LoadingAnimation message="Loading Video Timeline..." />}>
-            <VideoTimelinePage 
-              clips={timelineClips}
-              duration={200}
-              currentTime={currentTime}
-              isPlaying={isPlaying}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onSeek={setCurrentTime}
-              onClipAdd={(clip) => {
-                const newClip = {
-                  id: Date.now().toString(),
-                  type: clip.type || 'video',
-                  name: clip.name || 'New Clip',
-                  duration: clip.duration || 30,
-                  startTime: clip.startTime || currentTime,
-                  endTime: (clip.startTime || currentTime) + (clip.duration || 30),
-                  track: clip.track || 0
-                };
-                setTimelineClips(prev => [...prev, newClip]);
-              }}
-              onClipEdit={(clipId, updates) => {
-                setTimelineClips(prev => prev.map(clip => 
-                  clip.id === clipId ? { ...clip, ...updates } : clip
-                ));
-              }}
-              onClipDelete={(clipId) => {
-                setTimelineClips(prev => prev.filter(clip => clip.id !== clipId));
-              }}
-            />
+            {/* VideoTimelinePage removed for debugging login */}
+            <div className="p-4 text-neutral-500 dark:text-neutral-400">Video Timeline functionality temporarily disabled for debugging.</div>
           </Suspense>
         );
       case 'library':
