@@ -18,18 +18,21 @@ DROP POLICY IF EXISTS "Workspace owners and admins can remove members" ON worksp
 DROP POLICY IF EXISTS "Workspace owners and admins can update member roles" ON workspace_members;
 
 -- Create simplified, non-recursive policies for workspace_members
+DROP POLICY IF EXISTS "Users can view their own memberships" ON workspace_members;
 CREATE POLICY "Users can view their own memberships"
   ON workspace_members
   FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can insert their own memberships" ON workspace_members;
 CREATE POLICY "Users can insert their own memberships"
   ON workspace_members
   FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can update their own memberships" ON workspace_members;
 CREATE POLICY "Users can update their own memberships"
   ON workspace_members
   FOR UPDATE
@@ -37,6 +40,7 @@ CREATE POLICY "Users can update their own memberships"
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can delete their own memberships" ON workspace_members;
 CREATE POLICY "Users can delete their own memberships"
   ON workspace_members
   FOR DELETE
@@ -45,6 +49,7 @@ CREATE POLICY "Users can delete their own memberships"
 
 -- Create a separate policy for workspace owners to manage members
 -- This uses a direct workspace ownership check instead of recursive membership check
+DROP POLICY IF EXISTS "Workspace owners can manage all members" ON workspace_members;
 CREATE POLICY "Workspace owners can manage all members"
   ON workspace_members
   FOR ALL
@@ -65,6 +70,7 @@ CREATE POLICY "Workspace owners can manage all members"
   );
 
 -- Create a policy for admins to manage members (non-recursive)
+DROP POLICY IF EXISTS "Workspace admins can manage members" ON workspace_members;
 CREATE POLICY "Workspace admins can manage members"
   ON workspace_members
   FOR ALL

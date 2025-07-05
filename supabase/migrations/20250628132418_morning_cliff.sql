@@ -20,13 +20,14 @@ AFTER INSERT ON workspaces
 FOR EACH ROW
 EXECUTE FUNCTION add_workspace_owner_as_member();
 -- Add missing policy for users to view their own workspace memberships
-CREATE POLICY IF NOT EXISTS "Users can view their own workspace memberships"
+DROP POLICY IF EXISTS "Users can view their own workspace memberships" ON workspace_members;
+CREATE POLICY "Users can view their own workspace memberships"
   ON workspace_members
   FOR SELECT
   USING (user_id = auth.uid());
-
 -- Add missing policy for users to select their own subscriptions
-CREATE POLICY IF NOT EXISTS "select_own_subscriptions"
+DROP POLICY IF EXISTS "select_own_subscriptions" ON subscriptions;
+CREATE POLICY "select_own_subscriptions"
   ON subscriptions
   FOR SELECT
   USING (workspace_id IN (
@@ -35,7 +36,8 @@ CREATE POLICY IF NOT EXISTS "select_own_subscriptions"
   ));
 
 -- Add missing policies for authenticated users to manage their subscriptions
-CREATE POLICY IF NOT EXISTS "Allow authenticated users to select their own subscriptions"
+DROP POLICY IF EXISTS "Allow authenticated users to select their own subscriptions" ON subscriptions;
+CREATE POLICY "Allow authenticated users to select their own subscriptions"
   ON subscriptions
   FOR SELECT
   USING (workspace_id IN (
@@ -43,7 +45,7 @@ CREATE POLICY IF NOT EXISTS "Allow authenticated users to select their own subsc
     WHERE user_id = auth.uid()
   ));
 
-CREATE POLICY IF NOT EXISTS "Allow authenticated users to insert subscriptions"
+CREATE POLICY "Allow authenticated users to insert subscriptions"
   ON subscriptions
   FOR INSERT
   WITH CHECK (
@@ -54,7 +56,7 @@ CREATE POLICY IF NOT EXISTS "Allow authenticated users to insert subscriptions"
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Allow authenticated users to update their own subscriptions"
+CREATE POLICY "Allow authenticated users to update their own subscriptions"
   ON subscriptions
   FOR UPDATE
   USING (workspace_id IN (
@@ -63,7 +65,7 @@ CREATE POLICY IF NOT EXISTS "Allow authenticated users to update their own subsc
   ))
   WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY IF NOT EXISTS "Allow authenticated users to delete their own subscriptions"
+CREATE POLICY "Allow authenticated users to delete their own subscriptions"
   ON subscriptions
   FOR DELETE
   USING (workspace_id IN (
