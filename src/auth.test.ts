@@ -21,10 +21,14 @@ describe('Authentication and Profile Flow', () => {
       const { error } = await supabase.auth.admin.deleteUser(userId);
       if (error) {
         console.error('Error cleaning up test user:', error);
+        // Consider whether cleanup failures should fail the test suite
       }
+    } else {
+      // Fallback cleanup by email if userId wasn't set
+      console.warn('UserId not set, attempting cleanup by email');
+      // Add email-based cleanup if supported by your setup
     }
   });
-
   it('should register a new user and create a profile', async () => {
     const { result } = renderHook(() => useAuth());
 
@@ -58,34 +62,41 @@ describe('Authentication and Profile Flow', () => {
     });
 
     expect(authResult).toBeDefined();
-    if (!authResult) return;
+    expect(authResult).not.toBeNull();
+    if (!authResult) {
+      throw new Error('Login failed - authResult is null');
+    }
 
     expect(authResult.user).toBeDefined();
     expect(authResult.user.id).toBe(userId);
-  });
 
+    // Verify hook state is updated
+    expect(result.current.user).toBeDefined();
+    expect(result.current.user?.id).toBe(userId);
+  });
   it('should log out a user', async () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
       await result.current.logout();
-    });
-
-    const { data: { session } } = await supabase.auth.getSession();
-    expect(session).toBeNull();
-  });
-
   it('should update a user profile', async () => {
     const { result } = renderHook(() => useAuth());
 
+    let loginResult: any;
     await act(async () => {
-      await result.current.login({ email: testEmail, password: testPassword });
+      loginResult = await result.current.login({ email: testEmail, password: testPassword });
     });
+
+    expect(loginResult).toBeDefined();
+    expect(loginResult.user).toBeDefined();
 
     const newName = 'Updated Test User';
     await act(async () => {
       await result.current.updateProfile({ name: newName });
     });
+
+    // Verify hook state is updated
+    expect(result.current.user).toBeDefined();
 
     // Verify that the profile was updated
     const { data: profile, error: profileError } = await supabase
@@ -93,6 +104,11 @@ describe('Authentication and Profile Flow', () => {
       .select('*')
       .eq('user_id', userId)
       .single();
+
+    expect(profileError).toBeNull();
+    expect(profile).toBeDefined();
+    expect(profile.name).toBe(newName);
+  });      .single();
 
     expect(profileError).toBeNull();
     expect(profile).toBeDefined();
