@@ -2,16 +2,19 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { NexusProvider } from './core/NexusContext';
 import './index.css';
+import * as Sentry from '@sentry/react';
 
 // Sentry error monitoring for production
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
-  import('@sentry/react')
-    .then((Sentry) => {
-      Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN });
-    })
-    .catch((error) => {
-      console.warn('Failed to initialize Sentry:', error);
-    });
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [
+      Sentry.consoleLoggingIntegration({ levels: ['log', 'error', 'warn'] }),
+    ],
+    _experiments: {
+      enableLogs: true,
+    },
+  });
 }
 
 // PostHog analytics for production

@@ -26,6 +26,7 @@
     "@devcycle/react-client-sdk": "^1.40.1",
     "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@sentry/react": "^9.33.0",
+    "@sentry/tracing": "^7.120.3",
     "@supabase/supabase-js": "^2.39.7",
     "@vercel/speed-insights": "^1.2.0",
     "express": "^4.19.3",
