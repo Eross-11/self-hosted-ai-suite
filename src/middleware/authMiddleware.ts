@@ -17,11 +17,10 @@ export const adminAuthMiddleware: RequestHandler = async (req: Request, res: Res
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError) {
-      console.error(`Supabase user fetch error: ${userError.message}`, { userId: user?.id });
+      console.error(`Supabase user fetch error: ${userError.message}`);
       res.status(401).json({ error: `Authentication failed: ${userError.message}` });
       return;
     }
-
     if (!user) {
       console.warn('Authentication failed: User not found or token expired.');
       res.status(401).json({ error: 'Authentication failed: Invalid or expired token.' });

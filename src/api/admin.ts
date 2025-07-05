@@ -3,6 +3,8 @@ import { Request, Response } from 'express';
 import { supabase } from '../lib/supabaseClient';
 import { adminAuthMiddleware } from '../middleware/authMiddleware';
 
+const DEFAULT_WORKSPACE_ROLE = 'member';
+
 // Helper function for consistent error handling
 const handleSupabaseError = (error: Error, res: Response) => {
   console.error('Supabase error:', error); // Log the error for debugging
@@ -43,11 +45,25 @@ router.post('/users/:id/role', adminAuthMiddleware, async (req: Request, res: Re
 });
 
 // Add user to workspace
-router.post('/workspaces/:id/add-user', async (req: Request, res: Response) => {
+router.post('/workspaces/:id/add-user', adminAuthMiddleware, async (req: Request, res: Response) => {
   const { id: workspace_id } = req.params;
   const { userId } = req.body;
-  // Default role: member
-  const { error } = await supabase.from('workspace_members').insert({ workspace_id, user_id: userId, role: 'member' });
+
+  // Basic UUID validation regex
+  const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+  if (!workspace_id || !uuidRegex.test(workspace_id)) {
+    res.status(400).json({ error: 'Invalid or missing workspace ID' });
+    return;
+  }
+
+  if (!userId || !uuidRegex.test(userId)) {
+    res.status(400).json({ error: 'Invalid or missing user ID' });
+    return;
+  }
+
+  // TODO: Consider moving this database interaction to a dedicated service layer (e.g., workspaceService.ts)
+  const { error } = await supabase.from('workspace_members').insert({ workspace_id, user_id: userId, role: DEFAULT_WORKSPACE_ROLE });
   if (error) {
     handleSupabaseError(error, res);
     return;
