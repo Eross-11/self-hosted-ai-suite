@@ -26,3 +26,6 @@ backend/.env
 
 # Ignore VS Code extension recommendations (personal)
 .vscode/extensions.json
+
+# Sentry Config File
+.env.sentry-build-plugin

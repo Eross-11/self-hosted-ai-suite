@@ -5,7 +5,6 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { SpanStatus } from '@sentry/tracing';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -64,17 +63,19 @@ export class ApiClient {
             const errorMessage =
               errorData.detail ||
               `HTTP ${response.status}: ${response.statusText}`;
-            span.setStatus(SpanStatus.InternalError);
+            const httpError = new Error(errorMessage);
+
+            span.setStatus({ code: 2, message: 'Internal Error' });
             span.setAttribute('http.status_code', response.status);
-            Sentry.captureException(new Error(errorMessage));
-            throw new Error(errorMessage);
+            Sentry.captureException(httpError);
+            throw httpError;
           }
 
-          span.setStatus(SpanStatus.Ok);
+          span.setStatus({ code: 1 });
           span.setAttribute('http.status_code', response.status);
           return await response.json();
         } catch (error) {
-          span.setStatus(SpanStatus.InternalError);
+          span.setStatus({ code: 2 });
           console.error(`API request failed: ${endpoint}`, error);
           Sentry.captureException(error);
 

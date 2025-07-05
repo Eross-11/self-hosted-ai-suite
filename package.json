@@ -25,6 +25,7 @@
   "dependencies": {
     "@devcycle/react-client-sdk": "^1.40.1",
     "@fingerprintjs/fingerprintjs": "^4.6.2",
+    "@sentry/nextjs": "^9.35.0",
     "@sentry/react": "^9.33.0",
     "@sentry/tracing": "^7.120.3",
     "@supabase/supabase-js": "^2.39.7",
