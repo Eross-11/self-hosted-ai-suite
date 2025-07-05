@@ -5,7 +5,6 @@ import { geminiService } from '../services/GeminiService';
 import { echoAI } from '../core/EchoAI';
 import { 
   Settings, 
-  Key, 
   Save, 
   Eye, 
   EyeOff, 
@@ -15,6 +14,7 @@ import {
   Sparkles,
   RefreshCw
 } from 'lucide-react';
+import SupabaseApiKeys from '../components/SupabaseApiKeys';
 
 export function SettingsPage() {
   const [geminiApiKey, setGeminiApiKey] = useState('');
@@ -53,7 +53,7 @@ export function SettingsPage() {
       loadModels();
       
       setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to save API key:', error);
       setSaveStatus('error');
       
@@ -61,7 +61,7 @@ export function SettingsPage() {
         userId: 'current_user',
         module: 'settings',
         action: 'save_gemini_api_key',
-        context: { success: false, error: error.message }
+        context: { success: false, error: error instanceof Error ? error.message : String(error) }
       });
       
       setTimeout(() => setSaveStatus('idle'), 3000);
@@ -78,7 +78,8 @@ export function SettingsPage() {
     trackInteraction({
       userId: 'current_user',
       module: 'settings',
-      action: 'clear_gemini_api_key'
+      action: 'clear_gemini_api_key',
+      context: {}
     });
   };
   
@@ -99,7 +100,7 @@ export function SettingsPage() {
         action: 'load_gemini_models',
         context: { success: true, modelCount: models.length }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to load models:', error);
       setSaveStatus('error');
       
@@ -107,7 +108,7 @@ export function SettingsPage() {
         userId: 'current_user',
         module: 'settings',
         action: 'load_gemini_models',
-        context: { success: false, error: error.message }
+        context: { success: false, error: error instanceof Error ? error.message : String(error) }
       });
       
       setTimeout(() => setSaveStatus('idle'), 3000);
@@ -148,6 +149,8 @@ export function SettingsPage() {
           </div>
         </div>
       </motion.div>
+
+      <SupabaseApiKeys />
       
       {/* Google Gemini Configuration */}
       <motion.div 
