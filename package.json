@@ -19,11 +19,8 @@
     "seed": "node scripts/seed.js",
     "seed:users": "node scripts/seedUsers.js",
     "dev:setup": "node scripts/devSetup.js",
-    "devsetup": "npm run dev:setup",
-    "audit": "npm audit --audit-level=moderate || true",
-    "lighthouse": "npx lighthouse http://localhost:5173 --quiet --chrome-flags='--headless' --output html --output-path ./lighthouse-report.html",
-    "analytics:posthog": "echo 'Integrate PostHog in your app for analytics'",
-    "lint:sql": "npx @supabase/splinter lint supabase/migrations"
+    "audit": "npm audit --audit-level=moderate",
+    "lighthouse": "npx lighthouse http://localhost:5173 --quiet --chrome-flags='--headless' --output html --output-path ./lighthouse-report.html"
   },
   "dependencies": {
     "@devcycle/react-client-sdk": "^1.40.1",
@@ -33,18 +30,17 @@
     "@vercel/speed-insights": "^1.2.0",
     "express": "^4.19.3",
     "framer-motion": "^10.16.16",
-    "install": "^0.13.0",
     "lucide-react": "^0.344.0",
     "posthog-js": "^1.157.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "stripe": "^14.19.0",
-    "@supabase/splinter": "^0.1.7"
+    "stripe": "^14.19.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@types/express": "^5.0.3",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@types/three": "^0.158.3",
