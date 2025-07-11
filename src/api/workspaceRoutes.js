@@ -6,7 +6,7 @@
 
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { verifyWorkspaceAccess, requireAdminOrOwner, requireOwner } from '../middleware/workspaceMiddleware';
+import { verifyWorkspaceAccess, requireAdminOrOwner, requireOwner } from '../middleware/workspaceMiddleware.js';
 
 // Initialize Supabase client
 const supabase = createClient(

@@ -8,9 +8,9 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
-import workspaceRoutes from './workspaceRoutes';
-import { createCheckoutSession } from './createCheckoutSession';
-import { handleStripeWebhook } from './stripeWebhook';
+import workspaceRoutes from './workspaceRoutes.js';
+import { createCheckoutSession } from './createCheckoutSession.js';
+import { handleStripeWebhook } from './stripeWebhook.js';
 
 // Load environment variables
 dotenv.config();
