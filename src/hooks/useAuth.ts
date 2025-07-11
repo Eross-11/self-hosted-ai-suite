@@ -93,7 +93,7 @@ export function useAuth() {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('name, avatar_url')
-        .eq('id', userData.user.id)
+        .eq('user_id', userData.user.id)
         .maybeSingle();
         
       if (profileError && profileError.code !== 'PGRST116') {
@@ -128,7 +128,7 @@ export function useAuth() {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('name, avatar_url')
-            .eq('id', session.user.id)
+            .eq('user_id', session.user.id)
             .maybeSingle();
             
           if (profileError && profileError.code !== 'PGRST116') {
