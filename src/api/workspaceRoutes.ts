@@ -93,7 +93,6 @@ router.get('/workspaces/:workspaceId', verifyWorkspaceAccess, async (req, res) =
 
 /**
  * Update workspace details
- */
 router.patch('/workspaces/:workspaceId', verifyWorkspaceAccess, requireOwner, async (req, res) => {
   try {
     const { name, logo_url } = req.body;
@@ -358,9 +357,6 @@ router.delete('/workspaces/:workspaceId/invitations/:invitationId', verifyWorksp
   }
 });
 
-/**
- * Accept invitation
- */
 router.post('/invitations/accept', authenticateUser, async (req, res) => {
   try {
     const { token } = req.body;
@@ -370,15 +366,20 @@ router.post('/invitations/accept', authenticateUser, async (req, res) => {
     }
     
     // Accept the invitation
-    const success = await supabase.rpc('accept_workspace_invitation', {
+    const { data: success, error } = await supabase.rpc('accept_workspace_invitation', {
       invitation_token: token,
-      user_uuid: req.user.id
+      user_uuid:     req.user.id
     });
-    
-    if (!success) {
+    if (error || !success) {
+      console.error('Error accepting invitation:', error);
       return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
     
+    return res.status(200).json({ message: 'Invitation accepted successfully' });
+  } catch (error) {
+    // …
+  }
+});    
     return res.status(200).json({ message: 'Invitation accepted successfully' });
   } catch (error) {
     console.error('Error in POST /invitations/accept:', error);
