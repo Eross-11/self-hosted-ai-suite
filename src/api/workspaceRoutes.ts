@@ -143,31 +143,7 @@ router.delete('/workspaces/:workspaceId', verifyWorkspaceAccess, requireOwner, a
   }
 });
 
-/**
- * Get workspace members
- */
-router.get('/workspaces/:workspaceId/members', verifyWorkspaceAccess, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('workspace_members')
-      .select(`
-        user_id,
-        role,
-        created_at,
-        users:user_id (
-          email,
-          name,
-          avatar_url
-        )
-      `)
-      .eq('workspace_id', req.workspaceId);
-      
-    if (error) {
-      console.error('Error fetching workspace members:', error);
-      return res.status(500).json({ error: 'Failed to fetch workspace members' });
-    }
-    
-    const members = data.map(item => ({
+    const members = (data ?? []).map(item => ({
       id: item.user_id,
       email: item.users.email,
       name: item.users.name,
