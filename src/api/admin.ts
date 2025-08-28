@@ -1,7 +1,8 @@
 import express from 'express';
 import { Request, Response } from 'express';
 import { supabase } from '../lib/supabaseClient';
-import { adminAuthMiddleware } from '../middleware/authMiddleware';
+import { adminAuthMiddleware } from '../middleware/adminAuthMiddleware';
+import { verifyWorkspaceAccess, requireAdminOrOwner, requireOwner } from '../middleware/workspaceMiddleware.js';
 
 const DEFAULT_WORKSPACE_ROLE = 'member';
 
@@ -60,7 +61,7 @@ router.post('/workspaces/:id/add-user', adminAuthMiddleware, async (req: Request
   if (!userId || !uuidRegex.test(userId)) {
     res.status(400).json({ error: 'Invalid or missing user ID' });
     return;
-  }
+  }  import { verifyWorkspaceAccess, requireAdminOrOwner, requireOwner } from '../middleware/workspaceMiddleware.js';  import { verifyWorkspaceAccess, requireAdminOrOwner, requireOwner } from '../middleware/workspaceMiddleware.js';
 
   // TODO: Consider moving this database interaction to a dedicated service layer (e.g., workspaceService.ts)
   const { error } = await supabase.from('workspace_members').insert({ workspace_id, user_id: userId, role: DEFAULT_WORKSPACE_ROLE });
@@ -72,7 +73,7 @@ router.post('/workspaces/:id/add-user', adminAuthMiddleware, async (req: Request
 });
 
 // Get all workspaces
-router.get('/workspaces', async (req: Request, res: Response) => {
+router.get('/workspaces', adminAuthMiddleware, async (req: Request, res: Response) => {
   const { data, error } = await supabase.from('workspaces').select('*');
   if (error) {
     handleSupabaseError(error, res);
@@ -82,7 +83,7 @@ router.get('/workspaces', async (req: Request, res: Response) => {
 });
 
 // Create workspace
-router.post('/workspaces', async (req: Request, res: Response) => {
+router.post('/workspaces', adminAuthMiddleware, async (req: Request, res: Response) => {
   const { name, owner_id } = req.body;
   const { data, error } = await supabase.from('workspaces').insert({ name, owner_id });
   if (error) {
@@ -93,7 +94,7 @@ router.post('/workspaces', async (req: Request, res: Response) => {
 });
 
 // Rename workspace
-router.post('/workspaces/:id/rename', async (req: Request, res: Response) => {
+router.post('/workspaces/:id/rename', adminAuthMiddleware, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
   const { error } = await supabase.from('workspaces').update({ name }).eq('id', id);
@@ -105,7 +106,7 @@ router.post('/workspaces/:id/rename', async (req: Request, res: Response) => {
 });
 
 // Delete workspace
-router.delete('/workspaces/:id', async (req: Request, res: Response) => {
+router.delete('/workspaces/:id', adminAuthMiddleware, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { error } = await supabase.from('workspaces').delete().eq('id', id);
   if (error) {

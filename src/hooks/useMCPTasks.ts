@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiService, TaskStatus, MCPCommand } from '../services/api';
+import { mcpApiService, TaskStatus, MCPCommand } from '../services/mcp';
 
 interface MCPTask extends TaskStatus {
   timestamp: string;
@@ -13,7 +13,7 @@ export function useMCPTasks() {
   // Fetch active tasks
   const fetchActiveTasks = useCallback(async () => {
     try {
-      const response = await apiService.getActiveTasks();
+      const response = await mcpApiService.getActiveTasks();
       setTasks(response.active_tasks.map(task => ({
         ...task,
         timestamp: new Date().toISOString()
@@ -31,7 +31,7 @@ export function useMCPTasks() {
     setError(null);
     
     try {
-      const response = await apiService.executeMCPCommand(command);
+      const response = await mcpApiService.executeMCPCommand(command);
       
       // Add the new task to the list
       const newTask: MCPTask = {
@@ -61,7 +61,7 @@ export function useMCPTasks() {
   const pollTaskStatus = useCallback(async (taskId: string) => {
     const pollInterval = setInterval(async () => {
       try {
-        const status = await apiService.getTaskStatus(taskId);
+        const status = await mcpApiService.getTaskStatus(taskId);
         
         setTasks(prev => prev.map(task => 
           task.task_id === taskId 
@@ -86,7 +86,7 @@ export function useMCPTasks() {
   // Cancel task
   const cancelTask = useCallback(async (taskId: string) => {
     try {
-      await apiService.cancelTask(taskId);
+      await mcpApiService.cancelTask(taskId);
       setTasks(prev => prev.filter(task => task.task_id !== taskId));
       setError(null);
     } catch (err) {

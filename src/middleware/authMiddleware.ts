@@ -1,59 +1,36 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { supabase } from '../lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+// No longer need to import User or declare global namespace here, as it's in express.d.ts
 
-// Define a constant for the admin role to avoid magic strings
-const ADMIN_ROLE = 'admin';
+// Initialize Supabase client with service role key for backend operations
+const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+);
 
-export const adminAuthMiddleware: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticateUser: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-      console.warn('Authentication attempt without token.');
-      res.status(401).json({ error: 'Authentication required: No token provided.' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized: No token provided.' });
       return;
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const token = authHeader.split(' ')[1];
 
-    if (userError) {
-      console.error(`Supabase user fetch error: ${userError.message}`);
-      res.status(401).json({ error: `Authentication failed: ${userError.message}` });
-      return;
-    }
-    if (!user) {
-      console.warn('Authentication failed: User not found or token expired.');
-      res.status(401).json({ error: 'Authentication failed: Invalid or expired token.' });
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Authentication failed:', authError?.message || 'User not found.');
+      res.status(401).json({ error: 'Unauthorized: Invalid or expired token.' });
       return;
     }
 
-    // Check if the user is an admin in any workspace
-    const { data: memberData, error: memberError } = await supabase
-      .from('workspace_members')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', ADMIN_ROLE)
-      .limit(1);
-
-    if (memberError) {
-      console.error(`Error checking admin role for user ${user.id}: ${memberError.message}`);
-      res.status(500).json({ error: 'Internal server error during role verification.' });
-      return;
-    }
-
-    if (!memberData || memberData.length === 0) {
-      console.warn(`Access denied for user ${user.id}: Not an administrator.`);
-      res.status(403).json({ error: 'Access denied: User is not an administrator.' });
-      return;
-    }
-
-    // Attach user and their admin status to the request for further use
-    req.user = user;
-    req.isAdmin = true;
+    req.user = user; // Attach user object to the request
     next();
   } catch (error) {
-    console.error('Unhandled authentication middleware error:', error instanceof Error ? error.message : error);
-    res.status(500).json({ error: 'Internal server error during authentication process.' });
+    console.error('Error in authenticateUser middleware:', error);
+    res.status(500).json({ error: 'Internal server error during authentication.' });
     return;
   }
 };

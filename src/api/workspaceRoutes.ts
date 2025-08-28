@@ -7,6 +7,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { verifyWorkspaceAccess, requireAdminOrOwner, requireOwner } from '../middleware/workspaceMiddleware.js';
+import { authenticateUser } from '../middleware/authMiddleware.js'; // Import the new middleware
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -19,26 +20,11 @@ const router = express.Router();
 /**
  * Get all workspaces for the authenticated user
  */
-router.get('/workspaces', async (req, res) => {
+router.get('/workspaces', authenticateUser, async (req, res) => {
   try {
-    // Get the JWT token from the Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    
-    // Verify the token and get the user ID
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
     // Get the user's workspaces
     const { data, error } = await supabase
-      .rpc('get_user_workspaces', { user_uuid: user.id });
+      .rpc('get_user_workspaces', { user_uuid: req.user.id });
       
     if (error) {
       console.error('Error fetching workspaces:', error);
@@ -55,7 +41,7 @@ router.get('/workspaces', async (req, res) => {
 /**
  * Create a new workspace
  */
-router.post('/workspaces', async (req, res) => {
+router.post('/workspaces', authenticateUser, async (req, res) => {
   try {
     const { name } = req.body;
     
@@ -63,25 +49,10 @@ router.post('/workspaces', async (req, res) => {
       return res.status(400).json({ error: 'Workspace name is required' });
     }
     
-    // Get the JWT token from the Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    
-    // Verify the token and get the user ID
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
     // Create the workspace
     const { data, error } = await supabase
       .from('workspaces')
-      .insert([{ name, owner_id: user.id }])
+      .insert([{ name, owner_id: req.user.id }])
       .select()
       .single();
       
@@ -414,7 +385,7 @@ router.delete('/workspaces/:workspaceId/invitations/:invitationId', verifyWorksp
 /**
  * Accept invitation
  */
-router.post('/invitations/accept', async (req, res) => {
+router.post('/invitations/accept', authenticateUser, async (req, res) => {
   try {
     const { token } = req.body;
     
@@ -422,25 +393,10 @@ router.post('/invitations/accept', async (req, res) => {
       return res.status(400).json({ error: 'Invitation token is required' });
     }
     
-    // Get the JWT token from the Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    const authToken = authHeader.split(' ')[1];
-    
-    // Verify the token and get the user ID
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authToken);
-    
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
     // Accept the invitation
     const success = await supabase.rpc('accept_workspace_invitation', {
       invitation_token: token,
-      user_uuid: user.id
+      user_uuid: req.user.id
     });
     
     if (!success) {

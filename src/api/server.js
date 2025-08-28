@@ -9,6 +9,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import workspaceRoutes from './workspaceRoutes.js';
+import mcpRoutes from './mcpRoutes.js';
 import { createCheckoutSession } from './createCheckoutSession.js';
 import { handleStripeWebhook } from './stripeWebhook.js';
 
@@ -27,6 +28,7 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), h
 
 // API routes
 app.use('/api', workspaceRoutes);
+app.use('/api', mcpRoutes); // Add MCP routes
 app.post('/api/billing/create-checkout-session', createCheckoutSession);
 
 // Health check endpoint

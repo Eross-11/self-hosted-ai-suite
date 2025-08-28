@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Terminal, 
-  Send, 
   Zap, 
   Brain, 
   Eye, 
@@ -11,32 +9,25 @@ import {
   Image,
   ChevronRight,
   Activity,
-  Play,
-  Pause,
-  Square,
-  RotateCcw,
   CheckCircle,
   AlertTriangle,
-  Clock,
   Cpu,
   HardDrive,
-  Wifi,
-  X,
-  Cloud
+  Wifi
 } from 'lucide-react';
 import { useNexus } from '../core/NexusContext';
 import { useMCPTasks } from '../hooks/useMCPTasks';
-import { useSystemStatus } from '../hooks/useSystemStatus';
 import { ConsoleHeader } from './console/ConsoleHeader';
 import { AIAgentStatus } from './console/AIAgentStatus';
 import { SystemStatus } from './console/SystemStatus';
 import { CommandInput } from './console/CommandInput';
 import { WorkflowLibrary } from './console/WorkflowLibrary';
 import { ConsoleLog } from './console/ConsoleLog';
+import { mcpApiService, SystemStatus as MCPSystemStatus } from '../services/mcp'; // Import mcpApiService and SystemStatus type
 
 interface AIAgent {
   name: string;
-  icon: any;
+  icon: React.ElementType; // Use React.ElementType for Lucide icons
   status: 'ready' | 'busy' | 'offline' | 'processing';
   color: string;
   load: number;
@@ -46,9 +37,27 @@ interface AIAgent {
 export function MCPConsole() {
   const [command, setCommand] = useState('');
   const { tasks, isLoading, error, executeCommand, cancelTask, clearError } = useMCPTasks();
-  const { echoState, trackInteraction } = useNexus();
-  const { status: systemStatus, isOnline } = useSystemStatus();
+  const { trackInteraction } = useNexus();
   const logEndRef = useRef<HTMLDivElement>(null);
+  const [isOnline, setIsOnline] = useState(false);
+  const [systemStatus, setSystemStatus] = useState<MCPSystemStatus | null>(null);
+
+  useEffect(() => {
+    const fetchSystemStatus = async () => {
+      try {
+        const status = await mcpApiService.getSystemStatus();
+        setSystemStatus(status);
+        setIsOnline(status.api_status === 'operational');
+      } catch (err) {
+        console.error('Failed to fetch system status:', err);
+        setIsOnline(false);
+      }
+    };
+
+    fetchSystemStatus();
+    const interval = setInterval(fetchSystemStatus, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const [aiAgents, setAiAgents] = useState<AIAgent[]>([
     { name: 'Transcriber AI', icon: Mic, status: 'ready', color: 'emerald', load: 12, tasks: 0 },
@@ -126,7 +135,7 @@ export function MCPConsole() {
     }
   };
 
-  const executeWorkflow = async (workflow: any) => {
+  const executeWorkflow = async (workflow: { name: string; command: string; workflow_type: string }) => {
     try {
       trackInteraction({
         userId: 'current_user',

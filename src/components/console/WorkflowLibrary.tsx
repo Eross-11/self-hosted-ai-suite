@@ -6,6 +6,7 @@ interface Workflow {
   name: string;
   description: string;
   command: string;
+  workflow_type: string; // Add workflow_type
 }
 
 interface WorkflowLibraryProps {
